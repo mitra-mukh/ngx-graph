@@ -1,7 +1,7 @@
 import {
   Component, ContentChild, ContentChildren, ElementRef, HostListener, Input,
   TemplateRef, ViewChild, ViewChildren, Output, ViewEncapsulation, EventEmitter,
-  ChangeDetectionStrategy, QueryList, AfterViewInit
+  ChangeDetectionStrategy, QueryList, AfterViewInit, OnInit
 } from '@angular/core';
 
 // rename transition due to conflict with d3 transition
@@ -17,6 +17,7 @@ import * as shape from 'd3-shape';
 import * as dagre from 'dagre';
 import { id } from '../utils';
 import { identity, scale, toSVG, transform, translate } from 'transformation-matrix';
+import { Observable, Subscription } from 'rxjs';
 
 /**
  * Matrix
@@ -112,7 +113,8 @@ export interface Matrix {
   </ngx-charts-chart>
   `
 })
-export class GraphComponent extends BaseChartComponent implements AfterViewInit {
+export class GraphComponent extends BaseChartComponent implements OnInit, AfterViewInit {
+  
 
   @Input() legend: boolean;
   @Input() nodes: any[] = [];
@@ -139,6 +141,7 @@ export class GraphComponent extends BaseChartComponent implements AfterViewInit 
   @Input() autoZoom: boolean = false;
   @Input() panOnZoom: boolean = true;
   @Input() autoCenter: boolean = false;
+  @Input() panToNode$: Observable<any>;
 
   @Output() activate: EventEmitter<any> = new EventEmitter();
   @Output() deactivate: EventEmitter<any> = new EventEmitter();
@@ -152,6 +155,7 @@ export class GraphComponent extends BaseChartComponent implements AfterViewInit 
   @ViewChildren('nodeElement') nodeElements: QueryList<ElementRef>;
   @ViewChildren('linkElement') linkElements: QueryList<ElementRef>;
 
+  subscriptions: Subscription[] = [];
   colors: ColorHelper;
   dims: ViewDimensions;
   margin = [0, 0, 0, 0];
@@ -215,6 +219,23 @@ export class GraphComponent extends BaseChartComponent implements AfterViewInit 
   @Input('panOffsetY')
   set panOffsetY(y) {
     this.panTo(null, Number(y));
+  }
+
+  /**
+   * Angular lifecycle event
+   *
+   *
+   * @memberOf GraphComponent
+   */
+  ngOnInit(): void {
+    if (this.panToNode$) {
+      this.subscriptions.push(
+        this.panToNode$.subscribe((nodeId: string) => {
+          this.panToNodeId(nodeId);
+        })
+      );
+    }
+
   }
 
   /**
@@ -832,5 +853,18 @@ export class GraphComponent extends BaseChartComponent implements AfterViewInit 
       (this.dims.width / 2) - ((this.graphDims.width * this.zoomLevel) / 2),
       (this.dims.height / 2) - ((this.graphDims.height * this.zoomLevel) / 2)
     );
+  }
+
+  /**
+   * Pans to the node
+   * @param nodeId
+   */
+  panToNodeId(nodeId: string): void {
+    const node = this.graph.nodes.find(n => n.id === nodeId);
+    if (!node) {
+      return;
+    }
+
+    this.panTo(node.position.x, node.position.y);
   }
 }
