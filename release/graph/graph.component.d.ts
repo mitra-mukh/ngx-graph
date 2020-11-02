@@ -1,6 +1,7 @@
-import { ElementRef, TemplateRef, EventEmitter, QueryList, AfterViewInit } from '@angular/core';
+import { ElementRef, TemplateRef, EventEmitter, QueryList, AfterViewInit, OnInit } from '@angular/core';
 import { BaseChartComponent, ViewDimensions, ColorHelper } from '@swimlane/ngx-charts';
 import 'd3-transition';
+import { Observable, Subscription } from 'rxjs';
 /**
  * Matrix
  */
@@ -12,7 +13,7 @@ export interface Matrix {
     e: number;
     f: number;
 }
-export declare class GraphComponent extends BaseChartComponent implements AfterViewInit {
+export declare class GraphComponent extends BaseChartComponent implements OnInit, AfterViewInit {
     legend: boolean;
     nodes: any[];
     links: any[];
@@ -34,6 +35,7 @@ export declare class GraphComponent extends BaseChartComponent implements AfterV
     autoZoom: boolean;
     panOnZoom: boolean;
     autoCenter: boolean;
+    panToNode$: Observable<any>;
     activate: EventEmitter<any>;
     deactivate: EventEmitter<any>;
     zoomChange: EventEmitter<any>;
@@ -43,6 +45,7 @@ export declare class GraphComponent extends BaseChartComponent implements AfterV
     chart: ElementRef;
     nodeElements: QueryList<ElementRef>;
     linkElements: QueryList<ElementRef>;
+    subscriptions: Subscription[];
     colors: ColorHelper;
     dims: ViewDimensions;
     margin: number[];
@@ -82,6 +85,13 @@ export declare class GraphComponent extends BaseChartComponent implements AfterV
      * Set the current `y` position of the graph
      */
     panOffsetY: number;
+    /**
+     * Angular lifecycle event
+     *
+     *
+     * @memberOf GraphComponent
+     */
+    ngOnInit(): void;
     /**
      * Angular lifecycle event
      *
@@ -291,4 +301,9 @@ export declare class GraphComponent extends BaseChartComponent implements AfterV
      * Center the graph in the viewport
      */
     center(): void;
+    /**
+     * Pans to the node
+     * @param nodeId
+     */
+    panToNodeId(nodeId: string): void;
 }

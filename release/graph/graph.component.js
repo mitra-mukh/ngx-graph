@@ -8,7 +8,17 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 import { Component, ContentChild, ElementRef, HostListener, Input, TemplateRef, ViewChild, ViewChildren, Output, ViewEncapsulation, EventEmitter, ChangeDetectionStrategy, QueryList } from '@angular/core';
+// rename transition due to conflict with d3 transition
 import { animate, style, transition as ngTransition, trigger } from '@angular/animations';
 import { BaseChartComponent, ChartComponent, calculateViewDimensions, ColorHelper } from '@swimlane/ngx-charts';
 import { select } from 'd3-selection';
@@ -17,6 +27,7 @@ import * as shape from 'd3-shape';
 import * as dagre from 'dagre';
 import { id } from '../utils';
 import { identity, scale, toSVG, transform, translate } from 'transformation-matrix';
+import { Observable } from 'rxjs';
 var GraphComponent = (function (_super) {
     __extends(GraphComponent, _super);
     function GraphComponent() {
@@ -37,6 +48,7 @@ var GraphComponent = (function (_super) {
         _this.activate = new EventEmitter();
         _this.deactivate = new EventEmitter();
         _this.zoomChange = new EventEmitter();
+        _this.subscriptions = [];
         _this.margin = [0, 0, 0, 0];
         _this.results = [];
         _this.isPanning = false;
@@ -52,16 +64,13 @@ var GraphComponent = (function (_super) {
         /**
          * Get the current zoom level
          */
-        get: /**
-           * Get the current zoom level
-           */
-        function () {
+        get: function () {
             return this.transformationMatrix.a;
         },
-        set: /**
-           * Set the current zoom level
-           */
-        function (level) {
+        /**
+         * Set the current zoom level
+         */
+        set: function (level) {
             this.zoomTo(Number(level));
         },
         enumerable: true,
@@ -71,16 +80,13 @@ var GraphComponent = (function (_super) {
         /**
          * Get the current `x` position of the graph
          */
-        get: /**
-           * Get the current `x` position of the graph
-           */
-        function () {
+        get: function () {
             return this.transformationMatrix.e;
         },
-        set: /**
-           * Set the current `x` position of the graph
-           */
-        function (x) {
+        /**
+         * Set the current `x` position of the graph
+         */
+        set: function (x) {
             this.panTo(Number(x), null);
         },
         enumerable: true,
@@ -90,16 +96,13 @@ var GraphComponent = (function (_super) {
         /**
          * Get the current `y` position of the graph
          */
-        get: /**
-           * Get the current `y` position of the graph
-           */
-        function () {
+        get: function () {
             return this.transformationMatrix.f;
         },
-        set: /**
-           * Set the current `y` position of the graph
-           */
-        function (y) {
+        /**
+         * Set the current `y` position of the graph
+         */
+        set: function (y) {
             this.panTo(null, Number(y));
         },
         enumerable: true,
@@ -111,19 +114,21 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
+    GraphComponent.prototype.ngOnInit = function () {
+        var _this = this;
+        if (this.panToNode$) {
+            this.subscriptions.push(this.panToNode$.subscribe(function (nodeId) {
+                _this.panToNodeId(nodeId);
+            }));
+        }
+    };
     /**
-       * Angular lifecycle event
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.ngAfterViewInit = /**
-       * Angular lifecycle event
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    function () {
+     * Angular lifecycle event
+     *
+     *
+     * @memberOf GraphComponent
+     */
+    GraphComponent.prototype.ngAfterViewInit = function () {
         var _this = this;
         _super.prototype.ngAfterViewInit.call(this);
         setTimeout(function () { return _this.update(); });
@@ -134,19 +139,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Base class update implementation for the dag graph
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.update = /**
-       * Base class update implementation for the dag graph
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    function () {
+    GraphComponent.prototype.update = function () {
         var _this = this;
         _super.prototype.update.call(this);
         this.zone.run(function () {
@@ -170,19 +163,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Draws the graph using dagre layouts
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.draw = /**
-       * Draws the graph using dagre layouts
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    function () {
+    GraphComponent.prototype.draw = function () {
         var _this = this;
         // Calc view dims for the nodes
         if (this.nodeElements && this.nodeElements.length) {
@@ -313,21 +294,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Redraws the lines when dragged or viewport updated
-       *
-       * @param {boolean} [animate=true]
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.redrawLines = /**
-       * Redraws the lines when dragged or viewport updated
-       *
-       * @param {boolean} [animate=true]
-       *
-       * @memberOf GraphComponent
-       */
-    function (_animate) {
+    GraphComponent.prototype.redrawLines = function (_animate) {
         var _this = this;
         if (_animate === void 0) { _animate = true; }
         this.linkElements.map(function (linkEl) {
@@ -354,19 +321,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Creates the dagre graph engine
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.createGraph = /**
-       * Creates the dagre graph engine
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    function () {
+    GraphComponent.prototype.createGraph = function () {
         var _this = this;
         this.graph = new dagre.graphlib.Graph({ multigraph: true });
         this.graph.setGraph({
@@ -418,21 +373,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Calculate the text directions / flipping
-       *
-       * @param {any} link
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.calcDominantBaseline = /**
-       * Calculate the text directions / flipping
-       *
-       * @param {any} link
-       *
-       * @memberOf GraphComponent
-       */
-    function (link) {
+    GraphComponent.prototype.calcDominantBaseline = function (link) {
         var firstPoint = link.points[0];
         var lastPoint = link.points[link.points.length - 1];
         link.oldTextPath = link.textPath;
@@ -454,23 +395,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Generate the new line path
-       *
-       * @param {any} points
-       * @returns {*}
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.generateLine = /**
-       * Generate the new line path
-       *
-       * @param {any} points
-       * @returns {*}
-       *
-       * @memberOf GraphComponent
-       */
-    function (points) {
+    GraphComponent.prototype.generateLine = function (points) {
         var lineFunction = shape.line().x(function (d) { return d.x; }).y(function (d) { return d.y; }).curve(this.curve);
         return lineFunction(points);
     };
@@ -482,27 +407,11 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Zoom was invoked from event
-       *
-       * @param {MouseEvent} $event
-       * @param {any} direction
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.onZoom = /**
-       * Zoom was invoked from event
-       *
-       * @param {MouseEvent} $event
-       * @param {any} direction
-       *
-       * @memberOf GraphComponent
-       */
-    function ($event, direction) {
+    GraphComponent.prototype.onZoom = function ($event, direction) {
         var zoomFactor = 1 + (direction === 'in' ? this.zoomSpeed : -this.zoomSpeed);
         var newZoomLevel = this.zoomLevel * zoomFactor;
         var isZoomInbounds = (newZoomLevel >= this.minZoomLevel && newZoomLevel <= this.maxZoomLevel);
-        // Check that zooming wouldn't put us out of bounds and zoom is enabaled
+        // Check that zooming wouldn't put us out of bounds and zoom is enabaled 
         if (isZoomInbounds && this.enableZoom) {
             this.zoomChange.emit(this.zoomLevel);
         }
@@ -535,19 +444,7 @@ var GraphComponent = (function (_super) {
      * @param x
      * @param y
      */
-    /**
-       * Pan by x/y
-       *
-       * @param x
-       * @param y
-       */
-    GraphComponent.prototype.pan = /**
-       * Pan by x/y
-       *
-       * @param x
-       * @param y
-       */
-    function (x, y) {
+    GraphComponent.prototype.pan = function (x, y) {
         this.transformationMatrix = transform(this.transformationMatrix, translate(x, y));
         this.updateTransform();
     };
@@ -557,19 +454,7 @@ var GraphComponent = (function (_super) {
      * @param x
      * @param y
      */
-    /**
-       * Pan to a fixed x/y
-       *
-       * @param x
-       * @param y
-       */
-    GraphComponent.prototype.panTo = /**
-       * Pan to a fixed x/y
-       *
-       * @param x
-       * @param y
-       */
-    function (x, y) {
+    GraphComponent.prototype.panTo = function (x, y) {
         this.transformationMatrix.e = x === null || x === undefined || isNaN(x) ? this.transformationMatrix.e : Number(x);
         this.transformationMatrix.f = y === null || y === undefined || isNaN(y) ? this.transformationMatrix.f : Number(y);
         this.updateTransform();
@@ -579,17 +464,7 @@ var GraphComponent = (function (_super) {
      *
      * @param factor Zoom multiplicative factor (1.1 for zooming in 10%, for instance)
      */
-    /**
-       * Zoom by a factor
-       *
-       * @param factor Zoom multiplicative factor (1.1 for zooming in 10%, for instance)
-       */
-    GraphComponent.prototype.zoom = /**
-       * Zoom by a factor
-       *
-       * @param factor Zoom multiplicative factor (1.1 for zooming in 10%, for instance)
-       */
-    function (factor) {
+    GraphComponent.prototype.zoom = function (factor) {
         this.transformationMatrix = transform(this.transformationMatrix, scale(factor, factor));
         this.updateTransform();
     };
@@ -598,17 +473,7 @@ var GraphComponent = (function (_super) {
      *
      * @param level
      */
-    /**
-       * Zoom to a fixed level
-       *
-       * @param level
-       */
-    GraphComponent.prototype.zoomTo = /**
-       * Zoom to a fixed level
-       *
-       * @param level
-       */
-    function (level) {
+    GraphComponent.prototype.zoomTo = function (level) {
         this.transformationMatrix.a = isNaN(level) ? this.transformationMatrix.a : Number(level);
         this.transformationMatrix.d = isNaN(level) ? this.transformationMatrix.d : Number(level);
         this.updateTransform();
@@ -620,21 +485,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Pan was invoked from event
-       *
-       * @param {any} event
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.onPan = /**
-       * Pan was invoked from event
-       *
-       * @param {any} event
-       *
-       * @memberOf GraphComponent
-       */
-    function (event) {
+    GraphComponent.prototype.onPan = function (event) {
         this.pan(event.movementX, event.movementY);
     };
     /**
@@ -644,21 +495,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Drag was invoked from an event
-       *
-       * @param {any} event
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.onDrag = /**
-       * Drag was invoked from an event
-       *
-       * @param {any} event
-       *
-       * @memberOf GraphComponent
-       */
-    function (event) {
+    GraphComponent.prototype.onDrag = function (event) {
         var node = this.draggingNode;
         node.x += event.movementX / this.zoomLevel;
         node.y += event.movementY / this.zoomLevel;
@@ -695,19 +532,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Update the entire view for the new pan position
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.updateTransform = /**
-       * Update the entire view for the new pan position
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    function () {
+    GraphComponent.prototype.updateTransform = function () {
         this.transform = toSVG(this.transformationMatrix);
     };
     /**
@@ -718,23 +543,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Node was clicked
-       *
-       * @param {any} event
-       * @returns {void}
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.onClick = /**
-       * Node was clicked
-       *
-       * @param {any} event
-       * @returns {void}
-       *
-       * @memberOf GraphComponent
-       */
-    function (event) {
+    GraphComponent.prototype.onClick = function (event) {
         this.select.emit(event);
     };
     /**
@@ -745,23 +554,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Node was focused
-       *
-       * @param {any} event
-       * @returns {void}
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.onActivate = /**
-       * Node was focused
-       *
-       * @param {any} event
-       * @returns {void}
-       *
-       * @memberOf GraphComponent
-       */
-    function (event) {
+    GraphComponent.prototype.onActivate = function (event) {
         if (this.activeEntries.indexOf(event) > -1)
             return;
         this.activeEntries = [event].concat(this.activeEntries);
@@ -774,21 +567,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Node was defocused
-       *
-       * @param {any} event
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.onDeactivate = /**
-       * Node was defocused
-       *
-       * @param {any} event
-       *
-       * @memberOf GraphComponent
-       */
-    function (event) {
+    GraphComponent.prototype.onDeactivate = function (event) {
         var idx = this.activeEntries.indexOf(event);
         this.activeEntries.splice(idx, 1);
         this.activeEntries = this.activeEntries.slice();
@@ -801,21 +580,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Get the domain series for the nodes
-       *
-       * @returns {any[]}
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.getSeriesDomain = /**
-       * Get the domain series for the nodes
-       *
-       * @returns {any[]}
-       *
-       * @memberOf GraphComponent
-       */
-    function () {
+    GraphComponent.prototype.getSeriesDomain = function () {
         var _this = this;
         return this.nodes.map(function (d) { return _this.groupResultsBy(d); })
             .reduce(function (nodes, node) { return nodes.includes(node) ? nodes : nodes.concat([node]); }, [])
@@ -830,25 +595,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Tracking for the link
-       *
-       * @param {any} index
-       * @param {any} link
-       * @returns {*}
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.trackLinkBy = /**
-       * Tracking for the link
-       *
-       * @param {any} index
-       * @param {any} link
-       * @returns {*}
-       *
-       * @memberOf GraphComponent
-       */
-    function (index, link) {
+    GraphComponent.prototype.trackLinkBy = function (index, link) {
         return link.id;
     };
     /**
@@ -860,25 +607,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Tracking for the node
-       *
-       * @param {any} index
-       * @param {any} node
-       * @returns {*}
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.trackNodeBy = /**
-       * Tracking for the node
-       *
-       * @param {any} index
-       * @param {any} node
-       * @returns {*}
-       *
-       * @memberOf GraphComponent
-       */
-    function (index, node) {
+    GraphComponent.prototype.trackNodeBy = function (index, node) {
         return node.id;
     };
     /**
@@ -887,19 +616,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Sets the colors the nodes
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.setColors = /**
-       * Sets the colors the nodes
-       *
-       *
-       * @memberOf GraphComponent
-       */
-    function () {
+    GraphComponent.prototype.setColors = function () {
         this.colors = new ColorHelper(this.scheme, 'ordinal', this.seriesDomain, this.customColors);
     };
     /**
@@ -909,21 +626,7 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * Gets the legend options
-       *
-       * @returns {*}
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.getLegendOptions = /**
-       * Gets the legend options
-       *
-       * @returns {*}
-       *
-       * @memberOf GraphComponent
-       */
-    function () {
+    GraphComponent.prototype.getLegendOptions = function () {
         return {
             scaleType: 'ordinal',
             domain: this.seriesDomain,
@@ -931,20 +634,13 @@ var GraphComponent = (function (_super) {
         };
     };
     /**
-       * On mouse move event, used for panning and dragging.
-       *
-       * @param {MouseEvent} $event
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.onMouseMove = /**
-       * On mouse move event, used for panning and dragging.
-       *
-       * @param {MouseEvent} $event
-       *
-       * @memberOf GraphComponent
-       */
-    function ($event) {
+     * On mouse move event, used for panning and dragging.
+     *
+     * @param {MouseEvent} $event
+     *
+     * @memberOf GraphComponent
+     */
+    GraphComponent.prototype.onMouseMove = function ($event) {
         if (this.isPanning && this.panningEnabled) {
             this.onPan($event);
         }
@@ -953,20 +649,13 @@ var GraphComponent = (function (_super) {
         }
     };
     /**
-       * On mouse up event to disable panning/dragging.
-       *
-       * @param {MouseEvent} $event
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.onMouseUp = /**
-       * On mouse up event to disable panning/dragging.
-       *
-       * @param {MouseEvent} $event
-       *
-       * @memberOf GraphComponent
-       */
-    function ($event) {
+     * On mouse up event to disable panning/dragging.
+     *
+     * @param {MouseEvent} $event
+     *
+     * @memberOf GraphComponent
+     */
+    GraphComponent.prototype.onMouseUp = function ($event) {
         this.isDragging = false;
         this.isPanning = false;
     };
@@ -978,37 +667,26 @@ var GraphComponent = (function (_super) {
      *
      * @memberOf GraphComponent
      */
-    /**
-       * On node mouse down to kick off dragging
-       *
-       * @param {MouseEvent} event
-       * @param {*} node
-       *
-       * @memberOf GraphComponent
-       */
-    GraphComponent.prototype.onNodeMouseDown = /**
-       * On node mouse down to kick off dragging
-       *
-       * @param {MouseEvent} event
-       * @param {*} node
-       *
-       * @memberOf GraphComponent
-       */
-    function (event, node) {
+    GraphComponent.prototype.onNodeMouseDown = function (event, node) {
         this.isDragging = true;
         this.draggingNode = node;
     };
     /**
      * Center the graph in the viewport
      */
-    /**
-       * Center the graph in the viewport
-       */
-    GraphComponent.prototype.center = /**
-       * Center the graph in the viewport
-       */
-    function () {
+    GraphComponent.prototype.center = function () {
         this.panTo((this.dims.width / 2) - ((this.graphDims.width * this.zoomLevel) / 2), (this.dims.height / 2) - ((this.graphDims.height * this.zoomLevel) / 2));
+    };
+    /**
+     * Pans to the node
+     * @param nodeId
+     */
+    GraphComponent.prototype.panToNodeId = function (nodeId) {
+        var node = this.graph.nodes.find(function (n) { return n.id === nodeId; });
+        if (!node) {
+            return;
+        }
+        this.panTo(node.position.x, node.position.y);
     };
     GraphComponent.decorators = [
         { type: Component, args: [{
