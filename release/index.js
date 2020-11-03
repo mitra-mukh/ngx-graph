@@ -41171,7 +41171,7 @@ var graph_component_GraphComponent = (function (_super) {
     GraphComponent = __decorate([
         Object(core_["Component"])({
             selector: 'ngx-graph',
-            styles: [__webpack_require__("./graph/graph.component.css")],
+            styles: [__webpack_require__("./src/graph/graph.component.scss")],
             encapsulation: core_["ViewEncapsulation"].None,
             changeDetection: core_["ChangeDetectionStrategy"].OnPush,
             animations: [
