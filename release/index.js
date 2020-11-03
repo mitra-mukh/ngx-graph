@@ -40373,6 +40373,7 @@ var graph_component_GraphComponent = (function (_super) {
         _this.activate = new core_["EventEmitter"]();
         _this.deactivate = new core_["EventEmitter"]();
         _this.zoomChange = new core_["EventEmitter"]();
+        _this.subscriptions = [];
         _this.margin = [0, 0, 0, 0];
         _this.results = [];
         _this.isPanning = false;
@@ -40432,6 +40433,20 @@ var graph_component_GraphComponent = (function (_super) {
         enumerable: true,
         configurable: true
     });
+    /**
+    * Angular lifecycle event
+    *
+    *
+    * @memberOf GraphComponent
+    */
+    GraphComponent.prototype.ngOnInit = function () {
+        var _this = this;
+        if (this.panToNode$) {
+            this.subscriptions.push(this.panToNode$.subscribe(function (nodeId) {
+                _this.panToNodeId(nodeId);
+            }));
+        }
+    };
     /**
      * Angular lifecycle event
      *
@@ -40987,6 +41002,17 @@ var graph_component_GraphComponent = (function (_super) {
     GraphComponent.prototype.center = function () {
         this.panTo((this.dims.width / 2) - ((this.graphDims.width * this.zoomLevel) / 2), (this.dims.height / 2) - ((this.graphDims.height * this.zoomLevel) / 2));
     };
+    /**
+     * Pans to the node
+     * @param nodeId
+     */
+    GraphComponent.prototype.panToNodeId = function (nodeId) {
+        var node = this.graph.nodes.find(function (n) { return n.id === nodeId; });
+        if (!node) {
+            return;
+        }
+        this.panTo(node.position.x, node.position.y);
+    };
     __decorate([
         Object(core_["Input"])(),
         __metadata("design:type", Boolean)
@@ -41072,6 +41098,10 @@ var graph_component_GraphComponent = (function (_super) {
         __metadata("design:type", Boolean)
     ], GraphComponent.prototype, "autoCenter", void 0);
     __decorate([
+        Object(core_["Input"])(),
+        __metadata("design:type", core_["Observable"])
+    ], GraphComponent.prototype, "panToNode$", void 0);
+    __decorate([
         Object(core_["Output"])(),
         __metadata("design:type", core_["EventEmitter"])
     ], GraphComponent.prototype, "activate", void 0);
@@ -41141,7 +41171,7 @@ var graph_component_GraphComponent = (function (_super) {
     GraphComponent = __decorate([
         Object(core_["Component"])({
             selector: 'ngx-graph',
-            styles: [__webpack_require__("./src/graph/graph.component.scss")],
+            styles: [__webpack_require__("./graph/graph.component.css")],
             encapsulation: core_["ViewEncapsulation"].None,
             changeDetection: core_["ChangeDetectionStrategy"].OnPush,
             animations: [

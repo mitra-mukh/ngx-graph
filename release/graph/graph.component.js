@@ -688,62 +688,177 @@ var GraphComponent = (function (_super) {
         }
         this.panTo(node.position.x, node.position.y);
     };
-    GraphComponent.decorators = [
-        { type: Component, args: [{
-                    selector: 'ngx-graph',
-                    styleUrls: ['./graph.component.css'],
-                    encapsulation: ViewEncapsulation.None,
-                    changeDetection: ChangeDetectionStrategy.OnPush,
-                    animations: [
-                        trigger('link', [
-                            ngTransition('* => *', [
-                                animate(500, style({ transform: '*' }))
-                            ])
-                        ])
-                    ],
-                    template: "\n    <ngx-charts-chart\n      [view]=\"[width, height]\"\n      [showLegend]=\"legend\"\n      [legendOptions]=\"legendOptions\"\n      (legendLabelClick)=\"onClick($event)\"\n      (legendLabelActivate)=\"onActivate($event)\"\n      (legendLabelDeactivate)=\"onDeactivate($event)\"\n      mouseWheel\n      (mouseWheelUp)=\"onZoom($event, 'in')\"\n      (mouseWheelDown)=\"onZoom($event, 'out')\">\n      <svg:g\n        *ngIf=\"initialized\"\n        [attr.transform]=\"transform\"\n        class=\"graph chart\">\n          <defs>\n            <ng-template *ngIf=\"defsTemplate\" [ngTemplateOutlet]=\"defsTemplate\">\n            </ng-template>\n            <svg:path\n              class=\"text-path\"\n              *ngFor=\"let link of _links\"\n              [attr.d]=\"link.textPath\"\n              [attr.id]=\"link.id\">\n            </svg:path>\n          </defs>\n          <svg:rect\n            class=\"panning-rect\"\n            [attr.width]=\"dims.width * 100\"\n            [attr.height]=\"dims.height * 100\"\n            [attr.transform]=\"'translate(' + ((-dims.width || 0) * 50) +',' + ((-dims.height || 0) *50) + ')' \"\n            (mousedown)=\"isPanning = true\" />\n          <svg:g class=\"links\">\n            <svg:g\n              *ngFor=\"let link of _links; trackBy: trackLinkBy\"\n              class=\"link-group\"\n              #linkElement\n              [id]=\"link.id\">\n              <ng-template\n                *ngIf=\"linkTemplate\"\n                [ngTemplateOutlet]=\"linkTemplate\"\n                [ngTemplateOutletContext]=\"{ $implicit: link }\">\n              </ng-template>\n              <svg:path *ngIf=\"!linkTemplate\" class=\"edge\" [attr.d]=\"link.line\" />\n            </svg:g>\n          </svg:g>\n          <svg:g class=\"nodes\">\n            <svg:g\n              *ngFor=\"let node of _nodes; trackBy: trackNodeBy\"\n              class=\"node-group\"\n              #nodeElement\n              [id]=\"node.id\"\n              [attr.transform]=\"node.options.transform\"\n                (click)=\"onClick(node)\" (mousedown)=\"onNodeMouseDown($event, node)\">\n                <ng-template\n                  *ngIf=\"nodeTemplate\"\n                  [ngTemplateOutlet]=\"nodeTemplate\"\n                  [ngTemplateOutletContext]=\"{ $implicit: node }\">\n                </ng-template>\n                <svg:circle\n                  *ngIf=\"!nodeTemplate\"\n                  r=\"10\"\n                  [attr.cx]=\"node.width / 2\" [attr.cy]=\"node.height / 2\"\n                  [attr.fill]=\"node.options.color\"\n                />\n            </svg:g>\n          </svg:g>\n      </svg:g>\n  </ngx-charts-chart>\n  "
-                },] },
-    ];
-    /** @nocollapse */
-    GraphComponent.ctorParameters = function () { return []; };
-    GraphComponent.propDecorators = {
-        "legend": [{ type: Input },],
-        "nodes": [{ type: Input },],
-        "links": [{ type: Input },],
-        "activeEntries": [{ type: Input },],
-        "orientation": [{ type: Input },],
-        "curve": [{ type: Input },],
-        "draggingEnabled": [{ type: Input },],
-        "nodeHeight": [{ type: Input },],
-        "nodeMaxHeight": [{ type: Input },],
-        "nodeMinHeight": [{ type: Input },],
-        "nodeWidth": [{ type: Input },],
-        "nodeMinWidth": [{ type: Input },],
-        "nodeMaxWidth": [{ type: Input },],
-        "panningEnabled": [{ type: Input },],
-        "enableZoom": [{ type: Input },],
-        "zoomSpeed": [{ type: Input },],
-        "minZoomLevel": [{ type: Input },],
-        "maxZoomLevel": [{ type: Input },],
-        "autoZoom": [{ type: Input },],
-        "panOnZoom": [{ type: Input },],
-        "autoCenter": [{ type: Input },],
-        "activate": [{ type: Output },],
-        "deactivate": [{ type: Output },],
-        "zoomChange": [{ type: Output },],
-        "linkTemplate": [{ type: ContentChild, args: ['linkTemplate',] },],
-        "nodeTemplate": [{ type: ContentChild, args: ['nodeTemplate',] },],
-        "defsTemplate": [{ type: ContentChild, args: ['defsTemplate',] },],
-        "chart": [{ type: ViewChild, args: [ChartComponent, { read: ElementRef },] },],
-        "nodeElements": [{ type: ViewChildren, args: ['nodeElement',] },],
-        "linkElements": [{ type: ViewChildren, args: ['linkElement',] },],
-        "groupResultsBy": [{ type: Input },],
-        "zoomLevel": [{ type: Input, args: ['zoomLevel',] },],
-        "panOffsetX": [{ type: Input, args: ['panOffsetX',] },],
-        "panOffsetY": [{ type: Input, args: ['panOffsetY',] },],
-        "onMouseMove": [{ type: HostListener, args: ['document:mousemove', ['$event'],] },],
-        "onMouseUp": [{ type: HostListener, args: ['document:mouseup',] },],
-    };
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], GraphComponent.prototype, "legend", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Array)
+    ], GraphComponent.prototype, "nodes", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Array)
+    ], GraphComponent.prototype, "links", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Array)
+    ], GraphComponent.prototype, "activeEntries", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", String)
+    ], GraphComponent.prototype, "orientation", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Object)
+    ], GraphComponent.prototype, "curve", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], GraphComponent.prototype, "draggingEnabled", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Number)
+    ], GraphComponent.prototype, "nodeHeight", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Number)
+    ], GraphComponent.prototype, "nodeMaxHeight", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Number)
+    ], GraphComponent.prototype, "nodeMinHeight", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Number)
+    ], GraphComponent.prototype, "nodeWidth", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Number)
+    ], GraphComponent.prototype, "nodeMinWidth", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Number)
+    ], GraphComponent.prototype, "nodeMaxWidth", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], GraphComponent.prototype, "panningEnabled", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], GraphComponent.prototype, "enableZoom", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Number)
+    ], GraphComponent.prototype, "zoomSpeed", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Number)
+    ], GraphComponent.prototype, "minZoomLevel", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Number)
+    ], GraphComponent.prototype, "maxZoomLevel", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], GraphComponent.prototype, "autoZoom", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], GraphComponent.prototype, "panOnZoom", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], GraphComponent.prototype, "autoCenter", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Observable)
+    ], GraphComponent.prototype, "panToNode$", void 0);
+    __decorate([
+        Output(),
+        __metadata("design:type", EventEmitter)
+    ], GraphComponent.prototype, "activate", void 0);
+    __decorate([
+        Output(),
+        __metadata("design:type", EventEmitter)
+    ], GraphComponent.prototype, "deactivate", void 0);
+    __decorate([
+        Output(),
+        __metadata("design:type", EventEmitter)
+    ], GraphComponent.prototype, "zoomChange", void 0);
+    __decorate([
+        ContentChild('linkTemplate'),
+        __metadata("design:type", TemplateRef)
+    ], GraphComponent.prototype, "linkTemplate", void 0);
+    __decorate([
+        ContentChild('nodeTemplate'),
+        __metadata("design:type", TemplateRef)
+    ], GraphComponent.prototype, "nodeTemplate", void 0);
+    __decorate([
+        ContentChild('defsTemplate'),
+        __metadata("design:type", TemplateRef)
+    ], GraphComponent.prototype, "defsTemplate", void 0);
+    __decorate([
+        ViewChild(ChartComponent, { read: ElementRef }),
+        __metadata("design:type", ElementRef)
+    ], GraphComponent.prototype, "chart", void 0);
+    __decorate([
+        ViewChildren('nodeElement'),
+        __metadata("design:type", QueryList)
+    ], GraphComponent.prototype, "nodeElements", void 0);
+    __decorate([
+        ViewChildren('linkElement'),
+        __metadata("design:type", QueryList)
+    ], GraphComponent.prototype, "linkElements", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Function)
+    ], GraphComponent.prototype, "groupResultsBy", void 0);
+    __decorate([
+        Input('zoomLevel'),
+        __metadata("design:type", Object),
+        __metadata("design:paramtypes", [Object])
+    ], GraphComponent.prototype, "zoomLevel", null);
+    __decorate([
+        Input('panOffsetX'),
+        __metadata("design:type", Object),
+        __metadata("design:paramtypes", [Object])
+    ], GraphComponent.prototype, "panOffsetX", null);
+    __decorate([
+        Input('panOffsetY'),
+        __metadata("design:type", Object),
+        __metadata("design:paramtypes", [Object])
+    ], GraphComponent.prototype, "panOffsetY", null);
+    __decorate([
+        HostListener('document:mousemove', ['$event']),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [MouseEvent]),
+        __metadata("design:returntype", void 0)
+    ], GraphComponent.prototype, "onMouseMove", null);
+    __decorate([
+        HostListener('document:mouseup'),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [MouseEvent]),
+        __metadata("design:returntype", void 0)
+    ], GraphComponent.prototype, "onMouseUp", null);
+    GraphComponent = __decorate([
+        Component({
+            selector: 'ngx-graph',
+            styleUrls: ['./graph.component.css'],
+            encapsulation: ViewEncapsulation.None,
+            changeDetection: ChangeDetectionStrategy.OnPush,
+            animations: [
+                trigger('link', [
+                    ngTransition('* => *', [
+                        animate(500, style({ transform: '*' }))
+                    ])
+                ])
+            ],
+            template: "\n    <ngx-charts-chart\n      [view]=\"[width, height]\"\n      [showLegend]=\"legend\"\n      [legendOptions]=\"legendOptions\"\n      (legendLabelClick)=\"onClick($event)\"\n      (legendLabelActivate)=\"onActivate($event)\"\n      (legendLabelDeactivate)=\"onDeactivate($event)\"\n      mouseWheel\n      (mouseWheelUp)=\"onZoom($event, 'in')\"\n      (mouseWheelDown)=\"onZoom($event, 'out')\">\n      <svg:g\n        *ngIf=\"initialized\"\n        [attr.transform]=\"transform\"\n        class=\"graph chart\">\n          <defs>\n            <ng-template *ngIf=\"defsTemplate\" [ngTemplateOutlet]=\"defsTemplate\">\n            </ng-template>\n            <svg:path\n              class=\"text-path\"\n              *ngFor=\"let link of _links\"\n              [attr.d]=\"link.textPath\"\n              [attr.id]=\"link.id\">\n            </svg:path>\n          </defs>\n          <svg:rect\n            class=\"panning-rect\"\n            [attr.width]=\"dims.width * 100\"\n            [attr.height]=\"dims.height * 100\"\n            [attr.transform]=\"'translate(' + ((-dims.width || 0) * 50) +',' + ((-dims.height || 0) *50) + ')' \"\n            (mousedown)=\"isPanning = true\" />\n          <svg:g class=\"links\">\n            <svg:g\n              *ngFor=\"let link of _links; trackBy: trackLinkBy\"\n              class=\"link-group\"\n              #linkElement\n              [id]=\"link.id\">\n              <ng-template\n                *ngIf=\"linkTemplate\"\n                [ngTemplateOutlet]=\"linkTemplate\"\n                [ngTemplateOutletContext]=\"{ $implicit: link }\">\n              </ng-template>\n              <svg:path *ngIf=\"!linkTemplate\" class=\"edge\" [attr.d]=\"link.line\" />\n            </svg:g>\n          </svg:g>\n          <svg:g class=\"nodes\">\n            <svg:g\n              *ngFor=\"let node of _nodes; trackBy: trackNodeBy\"\n              class=\"node-group\"\n              #nodeElement\n              [id]=\"node.id\"\n              [attr.transform]=\"node.options.transform\"\n                (click)=\"onClick(node)\" (mousedown)=\"onNodeMouseDown($event, node)\">\n                <ng-template\n                  *ngIf=\"nodeTemplate\"\n                  [ngTemplateOutlet]=\"nodeTemplate\"\n                  [ngTemplateOutletContext]=\"{ $implicit: node }\">\n                </ng-template>\n                <svg:circle\n                  *ngIf=\"!nodeTemplate\"\n                  r=\"10\"\n                  [attr.cx]=\"node.width / 2\" [attr.cy]=\"node.height / 2\"\n                  [attr.fill]=\"node.options.color\"\n                />\n            </svg:g>\n          </svg:g>\n      </svg:g>\n  </ngx-charts-chart>\n  "
+        })
+    ], GraphComponent);
     return GraphComponent;
 }(BaseChartComponent));
 export { GraphComponent };
